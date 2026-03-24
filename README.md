@@ -2,7 +2,7 @@
 
 A Shiny web application for generating and evaluating randomization sequences in clinical trials, built on the [randomizeR](https://cran.r-project.org/package=randomizeR) R package.
 
-Developed at **RealiseD** by Stefanie Schoenen and [Daniel Bodden](https://danielbodden.de/).
+Developed at **RealiseD** by [Stefanie Schoenen](https://www.linkedin.com/in/stefanie-schoenen-486b3a270/) and [Daniel Bodden](https://danielbodden.de/).
 
 **Live app:** [realisedrandomizer.shinyapps.io/realisedrandomizer](https://realisedrandomizer.shinyapps.io/realisedrandomizer)
 
