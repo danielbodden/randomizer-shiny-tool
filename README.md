@@ -4,7 +4,7 @@ A Shiny web application for generating and evaluating randomization sequences in
 
 Developed at **RealiseD** by [Stefanie Schoenen](https://www.linkedin.com/in/stefanie-schoenen-486b3a270/) and [Daniel Bodden](https://danielbodden.de/).
 
-**Live app:** [realisedrandomizer.shinyapps.io/realisedrandomizer](https://realisedrandomizer.shinyapps.io/realisedrandomizer)
+**Live app:** [realisedrandomizer.shinyapps.io/realisedrandomizer](https://realised.shinyapps.io/realisedrandomizer/)
 
 ---
 
