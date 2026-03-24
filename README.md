@@ -24,7 +24,6 @@ Generate reproducible, documented randomization lists for clinical trials across
 | Chen's Design | Maximum Tolerated Imbalance (MTI) |
 
 Each module supports:
-- Configurable parameters (sample size, block size, MTI, biasing probability)
 - Reproducible sequences via user-defined seed
 - Downloadable randomization list (CSV)
 - Downloadable PDF report
