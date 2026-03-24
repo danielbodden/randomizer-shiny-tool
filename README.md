@@ -11,17 +11,7 @@ Developed at **RealiseD** by [Stefanie Schoenen](https://www.linkedin.com/in/ste
 ## Features
 
 ### Randomization Sequence Generation
-Generate reproducible, documented randomization lists for clinical trials across seven procedures:
-
-| Procedure | Category |
-|---|---|
-| Complete Randomization | Unbounded Randomization |
-| Efron's Biased Coin Design | Unbounded Randomization |
-| Permuted Block Randomization | Terminal Balance |
-| Random Permuted Block Randomization | Terminal Balance |
-| Random Allocation Rule | Terminal Balance |
-| Big Stick Design | Maximum Tolerated Imbalance (MTI) |
-| Chen's Design | Maximum Tolerated Imbalance (MTI) |
+Generate reproducible, documented randomization lists for clinical trials.
 
 Each module supports:
 - Reproducible sequences via user-defined seed
