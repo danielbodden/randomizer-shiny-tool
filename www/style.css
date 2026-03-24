@@ -808,18 +808,21 @@ pre.shiny-text-output {
 .rd-card-meta {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   margin-top: auto;
   padding-top: 10px;
   border-top: 1px solid var(--grey);
 }
 
 .rd-card-arms {
+  display: inline-block;
   font-size: 11px;
   font-weight: 600;
   color: var(--green);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   background: rgba(0,119,74,0.08);
+  border: 1px solid rgba(0,119,74,0.2);
   padding: 2px 8px;
   border-radius: 20px;
 }
@@ -994,6 +997,42 @@ pre.shiny-text-output {
   text-decoration: underline;
 }
 
+/* ── Procedure step indicator (subpages) ─────────────────────────────────────── */
+
+.rd-steps-strip-page {
+  background-color: rgba(0,119,74,0.04);
+  border: 1px solid rgba(0,119,74,0.12);
+  border-radius: 8px;
+  margin: 0 0 48px 0;
+  padding: 14px 24px;
+  flex-wrap: nowrap;
+  gap: 16px;
+}
+
+.rd-steps-strip-page .rd-step-sep {
+  min-width: 16px;
+  flex: 1;
+}
+
+/* Mute the separator line between steps */
+.rd-steps-strip-page .rd-step-sep {
+  background-color: #d1d2d4;
+  opacity: 0.6;
+}
+
+/* Step 1: dimmed — already completed */
+.rd-step-done .rd-step-num {
+  background-color: transparent;
+  border: 1.5px solid #bbb;
+  color: #bbb;
+  font-size: 10px;
+}
+
+.rd-step-done .rd-step-text {
+  color: #bbb;
+  font-weight: 400;
+}
+
 /* ── Model box (bias panels) ─────────────────────────────────────────────────── */
 
 .rd-model-box {
@@ -1074,4 +1113,146 @@ pre.shiny-text-output {
   border-radius: 2px;
   color: #5a5756;
   line-height: 1.5;
+}
+
+
+/* ── About page ─────────────────────────────────────────────────────────────── */
+
+.rd-about-wrap {
+  min-height: 100vh;
+}
+
+.rd-about-hero {
+  background: linear-gradient(135deg, var(--green) 0%, #005c38 100%);
+  padding: 56px;
+}
+
+.rd-about-hero-inner {
+  max-width: 760px;
+}
+
+.rd-about-hero .rd-hero-eyebrow {
+  color: rgba(255,255,255,0.65);
+}
+
+.rd-about-hero .rd-hero-title {
+  color: #ffffff;
+  margin-bottom: 16px;
+}
+
+.rd-about-hero-sub {
+  color: rgba(255,255,255,0.85);
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.rd-about-body {
+  max-width: 760px;
+  padding: 48px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.rd-about-section-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--green);
+  margin: 0 0 14px 0;
+}
+
+.rd-about-section p {
+  color: var(--carbon);
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 0 0 10px 0;
+}
+
+.rd-about-cite-box {
+  background: rgba(0,119,74,0.04);
+  border-left: 3px solid var(--green);
+  border-radius: 0 4px 4px 0;
+  padding: 14px 18px;
+}
+
+.rd-about-cite {
+  font-size: 13px !important;
+  font-style: italic;
+  color: #5a5756 !important;
+  line-height: 1.6 !important;
+  margin: 0 !important;
+}
+
+.rd-about-team {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--grey);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.rd-about-person {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--grey);
+  gap: 14px;
+}
+
+.rd-about-person:last-child {
+  border-bottom: none;
+}
+
+.rd-about-person::before {
+  content: '';
+  width: 4px;
+  height: 36px;
+  border-radius: 2px;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+.rd-about-person-contrib::before {
+  background: var(--grey);
+}
+
+.rd-about-person-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rd-about-person-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--carbon);
+  text-decoration: none;
+}
+
+.rd-about-person-name:hover {
+  color: var(--green);
+}
+
+.rd-about-person-nolink {
+  display: block;
+}
+
+.rd-about-person-role {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.rd-about-person-contrib .rd-about-person-role {
+  color: #aaa;
 }

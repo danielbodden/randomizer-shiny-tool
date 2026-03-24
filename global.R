@@ -10,6 +10,26 @@ for (f in list.files("modules", full.names = TRUE, pattern = "\\.R$")) {
   source(f)
 }
 
+# Shared helper: 4-step workflow indicator for procedure pages
+# Step 1 is shown as completed (dimmed) since user has already chosen a procedure
+rand_steps_ui <- function() {
+  step <- function(n, label, done = FALSE) {
+    cls_step <- if (done) "rd-step rd-step-done" else "rd-step"
+    div(class = cls_step,
+        div(class = "rd-step-num", if (done) "\u2713" else n),
+        div(class = "rd-step-text", label))
+  }
+  div(class = "rd-steps-strip rd-steps-strip-page",
+    step("1", "Choose a procedure", done = TRUE),
+    div(class = "rd-step-sep"),
+    step("2", "Configure parameters"),
+    div(class = "rd-step-sep"),
+    step("3", "Generate sequence"),
+    div(class = "rd-step-sep"),
+    step("4", "Download report")
+  )
+}
+
 # Shared helper: bias summary as styled metric cards
 bias_summary_ui <- function(res, alpha = 0.05) {
   if (inherits(res, "error")) {

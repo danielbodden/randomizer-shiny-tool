@@ -39,6 +39,7 @@ mod_pbr_ui <- function(id) {
       class = "rd-main-inner",
 
       div(class = "rd-pattern-strip"),
+      rand_steps_ui(),
 
       h2(class = "rd-method-title", "Permuted Block Randomization"),
       span(class = "rd-method-badge badge-coral", "2-arm only"),

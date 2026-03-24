@@ -37,6 +37,7 @@ mod_cr_ui <- function(id) {
       class = "rd-main-inner",
 
       div(class = "rd-pattern-strip"),
+      rand_steps_ui(),
 
       h2(class = "rd-method-title", "Complete Randomization"),
       span(class = "rd-method-badge badge-green", "2 – 6 arms"),

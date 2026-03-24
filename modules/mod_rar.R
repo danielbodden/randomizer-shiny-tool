@@ -41,6 +41,7 @@ mod_rar_ui <- function(id) {
       class = "rd-main-inner",
 
       div(class = "rd-pattern-strip"),
+      rand_steps_ui(),
 
       h2(class = "rd-method-title", "Random Allocation Rule"),
       span(class = "rd-method-badge badge-green", "2 \u2013 6 arms"),

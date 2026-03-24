@@ -183,11 +183,12 @@ ui <- page_navbar(
       # Credits
       div(
         class = "rd-credits",
-        "Shiny Tool developed by ",
+        "Shiny Tool developed at\u00a0",
+        tags$a(href = "https://realised-ihi.eu/", target = "_blank", "RealiseD"),
+        "\u00a0by ",
         tags$span(style = "color:#00774A; font-weight:600;", "Stefanie Schoenen"),
         " and\u00a0",
-        tags$a(href = "https://danielbodden.de/", target = "_blank",
-               "Daniel Bodden")
+        tags$a(href = "https://danielbodden.de/", target = "_blank", "Daniel Bodden")
       )
     )
   ),
@@ -223,6 +224,118 @@ ui <- page_navbar(
     nav_panel("Imbalance",          mod_imbal_ui("imbal")),
     nav_panel("Selection Bias",     mod_selbias_ui("selbias")),
     nav_panel("Chronological Bias", mod_chronbias_ui("chronbias"))
+  ),
+
+  # ── About ─────────────────────────────────────────────────────────────────────
+  nav_panel(
+    "About",
+    div(
+      class = "rd-about-wrap",
+
+      # ── Hero ──────────────────────────────────────────────────────────────────
+      div(class = "rd-about-hero",
+        div(class = "rd-about-hero-inner",
+          p(class = "rd-hero-eyebrow", "Randomization List Generator"),
+          h1(class = "rd-hero-title", "About This Tool"),
+          p(class = "rd-about-hero-sub",
+            "A free, open-source Shiny application for generating and evaluating
+            randomization sequences in clinical trials, built on the ",
+            tags$strong("randomizeR"), " R package.")
+        )
+      ),
+
+      div(class = "rd-about-body",
+
+        # ── What is this tool ──────────────────────────────────────────────────
+        div(class = "rd-about-section",
+          h3(class = "rd-about-section-title", "What is this tool?"),
+          p("The Randomization List Generator provides a graphical interface for
+            generating reproducible randomization sequences and assessing their
+            statistical properties."),
+          p("The tool is designed for clinical trial statisticians, methodologists,
+            and researchers who need to plan, document, and evaluate randomization
+            strategies. All sequences are generated with a user-defined seed for
+            full reproducibility, and results can be exported as a PDF report.")
+        ),
+
+        # ── Powered by ────────────────────────────────────────────────────────
+        div(class = "rd-about-section",
+          h3(class = "rd-about-section-title", "Powered by randomizeR"),
+          p(HTML("This tool is a Shiny interface built on the
+            <a href='https://cran.r-project.org/package=randomizeR' target='_blank'>randomizeR</a>
+            R package, which implements randomization procedures and bias
+            assessment methods for clinical trials.")),
+          div(class = "rd-about-cite-box",
+            p(class = "rd-about-cite",
+              HTML("Uschner D, Schindler D, Hilgers RD, Heussen N (2018).
+              <em>randomizeR: An R package for the assessment and implementation
+              of randomization in clinical trials.</em>
+              Journal of Statistical Software, 85(8), 1\u201333.
+              doi:10.18637/jss.v085.i08"))
+          )
+        ),
+
+        # ── Contributors ──────────────────────────────────────────────────────
+        div(class = "rd-about-section",
+          h3(class = "rd-about-section-title", "Contributors"),
+          tags$ul(class = "rd-about-team",
+
+            tags$li(class = "rd-about-person",
+              div(class = "rd-about-person-left",
+                tags$a(class = "rd-about-person-name",
+                       href = "https://danielbodden.de/", target = "_blank",
+                       "Daniel Bodden"),
+                div(class = "rd-about-person-role", "Co-developer")
+              )
+            ),
+
+            tags$li(class = "rd-about-person",
+              div(class = "rd-about-person-left",
+                tags$a(class = "rd-about-person-name",
+                       href = "https://www.linkedin.com/in/stefanie-schoenen-486b3a270/",
+                       target = "_blank", "Stefanie Schoenen"),
+                div(class = "rd-about-person-role", "Co-developer")
+              )
+            ),
+
+            tags$li(class = "rd-about-person",
+              div(class = "rd-about-person-left",
+                span(class = "rd-about-person-name rd-about-person-nolink",
+                     "Ralf-Dieter Hilgers"),
+                div(class = "rd-about-person-role", "Supervisor")
+              )
+            ),
+
+            tags$li(class = "rd-about-person rd-about-person-contrib",
+              div(class = "rd-about-person-left",
+                tags$a(class = "rd-about-person-name",
+                       href = "https://drazsolkov.com/", target = "_blank",
+                       "Denis Raszolkov"),
+                div(class = "rd-about-person-role", "Initial concept")
+              )
+            )
+          )
+        ),
+
+        # ── Source ────────────────────────────────────────────────────────────
+        div(class = "rd-about-section",
+          h3(class = "rd-about-section-title", "Source code"),
+          p(HTML("The source code is openly available on
+            <a href='https://github.com/danielbodden/randomizer-shiny-tool'
+            target='_blank'>GitHub</a>.
+            Contributions and issue reports are welcome."))
+        ),
+
+        # ── Disclaimer ────────────────────────────────────────────────────────
+        div(class = "rd-about-section",
+          h3(class = "rd-about-section-title", "Disclaimer"),
+          p("Users are responsible for ensuring that the generated sequences
+            meet the requirements of their specific trial protocol and
+            regulatory context.")
+        )
+
+      )
+    )
   )
 )
 

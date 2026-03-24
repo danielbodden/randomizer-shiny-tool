@@ -34,6 +34,7 @@ mod_ebc_ui <- function(id) {
       class = "rd-main-inner",
 
       div(class = "rd-pattern-strip"),
+      rand_steps_ui(),
 
       h2(class = "rd-method-title", "Efron's Biased Coin Design"),
       span(class = "rd-method-badge badge-coral", "2-arm only"),

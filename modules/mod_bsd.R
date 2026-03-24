@@ -35,6 +35,7 @@ mod_bsd_ui <- function(id) {
 
       # Barcode pattern strip
       div(class = "rd-pattern-strip"),
+      rand_steps_ui(),
 
       # Title + badge
       h2(class = "rd-method-title", "Big Stick Design"),
