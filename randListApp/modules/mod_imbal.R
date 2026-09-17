@@ -63,25 +63,9 @@ mod_imbal_ui <- function(id) {
       h2(class = "rd-method-title", "Imbalance Assessment"),
 
       p(class = "rd-description",
-        "The assessment computes the distribution of the chosen imbalance measure
-        across all (exact) or many (simulated) allocation sequences."),
-
-      div(class = "rd-model-box",
-        h5(class = "rd-model-title", "Imbalance Measures"),
-        tags$ul(class = "rd-model-list",
-          tags$li(HTML("<strong>Absolute imbalance</strong> |N<sub>E</sub>(i) \u2212 N<sub>C</sub>(i)|
-                       \u2014 the unsigned difference in group sizes at trial end.")),
-          tags$li(HTML("<strong>Signed imbalance</strong> N<sub>E</sub>(i) \u2212 N<sub>C</sub>(i)
-                       \u2014 the signed difference; a mean near zero indicates symmetry.")),
-          tags$li(HTML("<strong>Loss</strong> \u2014 a scaled imbalance measure defined as
-                       |N<sub>E</sub>(i) \u2212 N<sub>C</sub>(i)| / N, bounded in [0, 1]."))
-        ),
-        p(class = "rd-model-text",
-          HTML("Here N<sub>E</sub>(i) and N<sub>C</sub>(i) are the cumulative counts
-          for the experimental and control group after i patients, and N is the total
-          sample size. The distribution of these measures is computed at the
-          <em>end of the sequence</em> (i = N)."))
-      ),
+        "Computes the distribution of the chosen imbalance measure (absolute, signed,
+        or loss) at the end of the sequence, across all (exact) or many (simulated)
+        allocations. See references for definitions."),
 
       div(class = "rd-reference-block",
         p(class = "rd-reference",

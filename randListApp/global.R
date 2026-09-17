@@ -30,6 +30,15 @@ rand_steps_ui <- function() {
   )
 }
 
+# Shared helper: info-circle icon (inline SVG so it always renders, unlike a
+# unicode glyph that depends on the client's installed fonts)
+rd_info_icon <- function() {
+  HTML('<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff">
+    <circle cx="12" cy="7" r="2"/>
+    <rect x="10" y="11" width="4" height="10" rx="1.5"/>
+  </svg>')
+}
+
 # Shared helper: bias summary as styled metric cards
 bias_summary_ui <- function(res, alpha = 0.05) {
   if (inherits(res, "error")) {
@@ -43,17 +52,18 @@ bias_summary_ui <- function(res, alpha = 0.05) {
   label   <- sub("P\\(rej\\)\\((.+)\\)", "\\1", col_nm)
   label   <- sub("testDec\\((.+)\\)", "\\1", label)
 
-  # Detect simulation: testDec column contains binary 0/1 values
+  # Simulation ("sim") vs exact ("Relative_Frequency" vs "Probability" weight column)
   d      <- res@D
-  is_sim <- length(unique(d[[3]])) <= 2
+  is_sim <- colnames(d)[2] == "Relative_Frequency"
+  r      <- nrow(d)
 
   fmt <- function(x) formatC(x, digits = 4, format = "f")
 
   # Highlight mean in red if it exceeds alpha
   mean_color <- if (!is.na(vals["mean"]) && vals["mean"] > alpha) "#c9614f" else "#00774A"
 
-  metric <- function(lbl, val, color = "#312f30", dimmed = FALSE) {
-    div(class = if (dimmed) "rd-bias-metric rd-bias-metric-dim" else "rd-bias-metric",
+  metric <- function(lbl, val, color = "#312f30") {
+    div(class = "rd-bias-metric",
         div(class = "rd-bias-metric-val", style = paste0("color:", color), fmt(val)),
         div(class = "rd-bias-metric-lbl", lbl))
   }
@@ -66,52 +76,49 @@ bias_summary_ui <- function(res, alpha = 0.05) {
     )
   }
 
-  tagList(
-    # Simulation warning
-    if (is_sim) {
-      div(class = "rd-bias-sim-note",
-          div(class = "rd-bias-sim-icon", "\u26a0"),
-          div(class = "rd-bias-sim-text",
-              tags$strong("Simulation result"),
+  if (is_sim) {
+    # Each simulated sequence yields a binary reject/not-reject decision, so the
+    # mean (empirical rejection rate) is the only informative moment; median, sd,
+    # and quantiles of a 0/1 variable carry no extra information and are dropped.
+    p_hat <- unname(vals["mean"])
+    mc_se <- sqrt(p_hat * (1 - p_hat) / r)
+
+    tagList(
+      div(class = "rd-info-note",
+          div(class = "rd-info-icon", rd_info_icon()),
+          div(class = "rd-info-text",
+              tags$strong(paste0("Simulation result (r = ", r, ")")),
               tags$br(),
-              "Each sequence yields a binary reject / not-reject decision.
-              Only the \u2014 mean \u2014 equals the empirical rejection rate and is
-              interpretable. Median, standard deviation, and quantiles
-              reflect the binary (0/1) distribution and are shown for
-              completeness only."))
-    },
-    # Primary metrics
-    div(class = "rd-bias-metrics-row",
-        metric("Mean P(reject H\u2080)", vals["mean"], mean_color),
-        metric("Median",                vals["x50"], dimmed = is_sim),
-        metric("Std. deviation",        vals["sd"],  dimmed = is_sim)
-    ),
-    # Quantile table
-    div(class = if (is_sim) "rd-bias-quant-wrap rd-bias-quant-dim" else "rd-bias-quant-wrap",
-        tags$table(class = "rd-bias-table",
-          tags$thead(tags$tr(
-            tags$th("Quantile"), tags$th("P(reject H\u2080)")
-          )),
-          tags$tbody(
-            quant_row("Minimum",  "min"),
-            quant_row("5th pct",  "x05"),
-            quant_row("25th pct", "x25"),
-            quant_row("75th pct", "x75"),
-            quant_row("95th pct", "x95"),
-            quant_row("Maximum",  "max")
-          )
-        ),
-        div(class = "rd-bias-alpha-note",
-            tags$span(class = "rd-bias-alpha-dot",
-                      style = if (vals["mean"] > alpha) "background:#c9614f" else "background:#00774A"),
-            if (vals["mean"] > alpha)
-              paste0("Mean (", fmt(vals["mean"]), ") exceeds \u03b1 = ", alpha,
-                     " \u2014 inflated type I error")
-            else
-              paste0("Mean (", fmt(vals["mean"]), ") within \u03b1 = ", alpha)
-        )
+              "Mean is a Monte Carlo estimate; its standard error is shown below.")),
+      div(class = "rd-bias-metrics-row",
+          metric("Mean P(reject H\u2080)",       p_hat, mean_color),
+          metric("Monte Carlo Standard Error", mc_se)
+      )
     )
-  )
+  } else {
+    tagList(
+      div(class = "rd-bias-metrics-row",
+          metric("Mean P(reject H\u2080)", vals["mean"], mean_color),
+          metric("Median",                vals["x50"]),
+          metric("Std. deviation",        vals["sd"])
+      ),
+      div(class = "rd-bias-quant-wrap",
+          tags$table(class = "rd-bias-table",
+            tags$thead(tags$tr(
+              tags$th("Quantile"), tags$th("P(reject H\u2080)")
+            )),
+            tags$tbody(
+              quant_row("Minimum",  "min"),
+              quant_row("5th pct",  "x05"),
+              quant_row("25th pct", "x25"),
+              quant_row("75th pct", "x75"),
+              quant_row("95th pct", "x95"),
+              quant_row("Maximum",  "max")
+            )
+          )
+      )
+    )
+  }
 }
 
 # Shared helper: bias assessment plot
@@ -257,6 +264,14 @@ imbal_summary_ui <- function(res) {
   mean_val <- sv["mean"]
   p_bal    <- sum(wts[vals == 0])
 
+  # Simulation ("Relative_Frequency") vs exact ("Probability") weight column.
+  # Under simulation, mean/median/quantiles are all estimated from only r draws,
+  # so the median and quantile table are dropped in favor of the mean's Monte
+  # Carlo standard error.
+  is_sim <- wt_col == "Relative_Frequency"
+  r      <- nrow(d)
+  mc_se  <- if (is_sim) sv["sd"] / sqrt(r) else NA
+
   fmt  <- function(x) formatC(x, digits = 4, format = "f")
   fmtp <- function(x) paste0(round(x * 100, 1), "%")
 
@@ -277,26 +292,42 @@ imbal_summary_ui <- function(res) {
     tags$tr(tags$td(lbl), tags$td(class = "rd-bias-td-val", fmt(sv[key])))
   }
 
-  tagList(
-    div(class = "rd-bias-metrics-row",
-        metric(paste("Mean", type_label), fmt(mean_val)),
-        metric("P(perfect balance)",      fmtp(p_bal), "#00774A"),
-        metric("Std. deviation",          fmt(sv["sd"]))
-    ),
-    div(class = "rd-bias-quant-wrap",
-        tags$table(class = "rd-bias-table",
-          tags$thead(tags$tr(tags$th("Quantile"), tags$th(type_label))),
-          tags$tbody(
-            quant_row("Minimum",  "min"),
-            quant_row("5th pct",  "x05"),
-            quant_row("25th pct", "x25"),
-            quant_row("75th pct", "x75"),
-            quant_row("95th pct", "x95"),
-            quant_row("Maximum",  "max")
-          )
-        )
+  if (is_sim) {
+    tagList(
+      div(class = "rd-info-note",
+          div(class = "rd-info-icon", rd_info_icon()),
+          div(class = "rd-info-text",
+              tags$strong(paste0("Simulation result (r = ", r, ")")),
+              tags$br(),
+              "Mean is a Monte Carlo estimate; its standard error is shown below.")),
+      div(class = "rd-bias-metrics-row",
+          metric(paste("Mean", type_label),      fmt(mean_val)),
+          metric("P(perfect balance)",            fmtp(p_bal), "#00774A"),
+          metric("Monte Carlo Standard Error",    fmt(mc_se))
+      )
     )
-  )
+  } else {
+    tagList(
+      div(class = "rd-bias-metrics-row",
+          metric(paste("Mean", type_label), fmt(mean_val)),
+          metric("P(perfect balance)",      fmtp(p_bal), "#00774A"),
+          metric("Std. deviation",          fmt(sv["sd"]))
+      ),
+      div(class = "rd-bias-quant-wrap",
+          tags$table(class = "rd-bias-table",
+            tags$thead(tags$tr(tags$th("Quantile"), tags$th(type_label))),
+            tags$tbody(
+              quant_row("Minimum",  "min"),
+              quant_row("5th pct",  "x05"),
+              quant_row("25th pct", "x25"),
+              quant_row("75th pct", "x75"),
+              quant_row("95th pct", "x95"),
+              quant_row("Maximum",  "max")
+            )
+          )
+      )
+    )
+  }
 }
 
 # Shared helper: randomization walk plot — RealiseD brand colors

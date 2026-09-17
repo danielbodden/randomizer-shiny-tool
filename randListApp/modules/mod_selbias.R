@@ -76,48 +76,9 @@ mod_selbias_ui <- function(id) {
       h2(class = "rd-method-title", "Selection Bias Assessment"),
 
       p(class = "rd-description",
-        "Selection bias arises when an investigator can predict upcoming treatment
-        assignments and use this knowledge to selectively enrol patients, inflating
-        the type I error rate. The Convergent Strategy (CS) assumes the investigator
-        guesses the treatment that will restore balance; the Directional Strategy (DS)
-        assumes a fixed preferred treatment. The assessment computes the rejection
-        probability P(reject H\u2080) across all (exact) or many (simulated) allocation
-        sequences."),
-
-      div(class = "rd-model-box",
-        h5(class = "rd-model-title", "Statistical Model"),
-        p(class = "rd-model-text",
-          "Each patient\u2019s response is modelled as:"),
-        p(class = "rd-model-eq",
-          HTML("y<sub>i</sub> = \u03bc<sub>E</sub> T<sub>i</sub> + \u03bc<sub>C</sub>(1 \u2212 T<sub>i</sub>) + \u03c4<sub>i</sub> + \u03b5<sub>i</sub>")),
-        p(class = "rd-model-text",
-          HTML("where T<sub>i</sub> \u2208 {0, 1} is the treatment indicator,
-          \u03bc<sub>E</sub> and \u03bc<sub>C</sub> are the expected responses under H\u2080,
-          \u03b5<sub>i</sub> \u223c N(0, \u03c3\u00b2) is the random error, and \u03c4<sub>i</sub>
-          is the selection bias effect. Under the
-          <strong>Convergent Strategy (CS)</strong> the investigator always guesses
-          the allocation that would restore balance; under the
-          <strong>Directional Strategy (DS)</strong> the investigator always guesses
-          the same preferred treatment. The bias effect is:")),
-        p(class = "rd-model-eq",
-          HTML("\u03c4<sub>i</sub> = \u03b7 \u00b7 sign(N<sub>E</sub>(i\u22121) \u2212 N<sub>C</sub>(i\u22121))")),
-        p(class = "rd-model-text",
-          HTML("where \u03b7 is the selection effect size and N<sub>E</sub>(i), N<sub>C</sub>(i)
-          are the cumulative counts at step i. The standardised effect is \u03b3 = \u03b7/\u03c3.")),
-        h5(class = "rd-model-title", "Hypothesis Test"),
-        p(class = "rd-model-text",
-          HTML("A two-sided t-test is applied to compare the two groups. Under selection bias,
-          the test statistic follows a <strong>doubly non-central t-distribution</strong>
-          with non-centrality parameters \u03b4 (shift) and \u03bb (spread), derived from
-          the specific allocation sequence and bias model. The type I error for a given
-          sequence is:")),
-        p(class = "rd-model-eq",
-          HTML("P(|S| > t<sub>crit</sub>) = F(\u2212t<sub>crit</sub>; \u03b4, \u03bb) + 1 \u2212 F(t<sub>crit</sub>; \u03b4, \u03bb)")),
-        p(class = "rd-model-text",
-          "The rejection probability is averaged (weighted by sequence probability for
-          exact assessment, or by relative frequency for simulation) to obtain the
-          overall type I error estimate.")
-      ),
+        "Assesses the type I error inflation from selection bias (Convergent or
+        Directional Strategy) under the chosen randomization procedure. See references
+        for the underlying model."),
 
       div(class = "rd-reference-block",
         p(class = "rd-reference",

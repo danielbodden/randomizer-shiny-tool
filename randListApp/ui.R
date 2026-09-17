@@ -25,8 +25,8 @@ ui <- page_navbar(
     success      = "#00774A",
     danger       = "#f6a092",
     `navbar-bg`  = "#00774A",
-    base_font    = font_google("Montserrat"),
-    heading_font = font_google("Montserrat"),
+    base_font    = "Montserrat, sans-serif",
+    heading_font = "Montserrat, sans-serif",
     font_scale   = 0.95
   ),
 
@@ -89,8 +89,8 @@ ui <- page_navbar(
       div(
         class = "rd-methods-section",
 
-        # Group 1: Unbounded randomization
-        p(class = "rd-methods-heading", "Unbounded Randomization"),
+        # Group 1: No terminal balance
+        p(class = "rd-methods-heading", "No Terminal Balance"),
         div(
           class = "rd-methods-grid",
 
@@ -178,24 +178,13 @@ ui <- page_navbar(
                   span(class = "rd-card-arms", "2 arms"),
                   span(class = "rd-card-arrow", "\u2192")))
         )
-      ),
-
-      # Credits
-      div(
-        class = "rd-credits",
-        "Shiny Tool developed at\u00a0",
-        tags$a(href = "https://realised-ihi.eu/", target = "_blank", "RealiseD"),
-        "\u00a0by ",
-        tags$span(style = "color:#00774A; font-weight:600;", "Stefanie Schoenen"),
-        " and\u00a0",
-        tags$a(href = "https://danielbodden.de/", target = "_blank", "Daniel Bodden")
       )
     )
   ),
 
-  # ── Unbounded Randomization ──────────────────────────────────────────────────
+  # ── No Terminal Balance ───────────────────────────────────────────────────────
   nav_menu(
-    "Unbounded Randomization",
+    "No Terminal Balance",
     nav_panel("Complete Randomization", mod_cr_ui("cr")),
     nav_panel("Efron's Biased Coin",    mod_ebc_ui("ebc"))
   ),
@@ -272,48 +261,6 @@ ui <- page_navbar(
               of randomization in clinical trials.</em>
               Journal of Statistical Software, 85(8), 1\u201333.
               doi:10.18637/jss.v085.i08"))
-          )
-        ),
-
-        # ── Contributors ──────────────────────────────────────────────────────
-        div(class = "rd-about-section",
-          h3(class = "rd-about-section-title", "Contributors"),
-          tags$ul(class = "rd-about-team",
-
-            tags$li(class = "rd-about-person",
-              div(class = "rd-about-person-left",
-                tags$a(class = "rd-about-person-name",
-                       href = "https://danielbodden.de/", target = "_blank",
-                       "Daniel Bodden"),
-                div(class = "rd-about-person-role", "Co-developer")
-              )
-            ),
-
-            tags$li(class = "rd-about-person",
-              div(class = "rd-about-person-left",
-                tags$a(class = "rd-about-person-name",
-                       href = "https://www.linkedin.com/in/stefanie-schoenen-486b3a270/",
-                       target = "_blank", "Stefanie Schoenen"),
-                div(class = "rd-about-person-role", "Co-developer")
-              )
-            ),
-
-            tags$li(class = "rd-about-person",
-              div(class = "rd-about-person-left",
-                span(class = "rd-about-person-name rd-about-person-nolink",
-                     "Ralf-Dieter Hilgers"),
-                div(class = "rd-about-person-role", "Supervisor")
-              )
-            ),
-
-            tags$li(class = "rd-about-person rd-about-person-contrib",
-              div(class = "rd-about-person-left",
-                tags$a(class = "rd-about-person-name",
-                       href = "https://drazsolkov.com/", target = "_blank",
-                       "Denis Raszolkov"),
-                div(class = "rd-about-person-role", "Initial concept")
-              )
-            )
           )
         ),
 

@@ -1,10 +1,10 @@
 name: realisedrandomizer
 title:
-username: realisedrandomizer
-account: realisedrandomizer
+username: realised
+account: realised
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 16952992
-bundleId: 11753145
+bundleId: 12568251
 url: https://realised.shinyapps.io/realisedrandomizer/
 version: 1

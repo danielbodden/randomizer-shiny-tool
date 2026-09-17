@@ -80,47 +80,9 @@ mod_chronbias_ui <- function(id) {
       h2(class = "rd-method-title", "Chronological Bias Assessment"),
 
       p(class = "rd-description",
-        "Chronological bias arises when there is a time trend in patient outcomes
-        or prognostic factors over the course of the trial. If the treatment
-        allocation is correlated with time, this trend can distort the treatment
-        comparison and inflate the type I error rate. The assessment computes the
-        rejection probability P(reject H\u2080) across allocation sequences under a
-        specified time trend model (linear, step, or logarithmic)."),
-
-      div(class = "rd-model-box",
-        h5(class = "rd-model-title", "Statistical Model"),
-        p(class = "rd-model-text",
-          "Each patient\u2019s response is modelled as:"),
-        p(class = "rd-model-eq",
-          HTML("y<sub>i</sub> = \u03bc<sub>E</sub> T<sub>i</sub> + \u03bc<sub>C</sub>(1 \u2212 T<sub>i</sub>) + \u03c4<sub>i</sub> + \u03b5<sub>i</sub>")),
-        p(class = "rd-model-text",
-          HTML("where T<sub>i</sub> \u2208 {0, 1} is the treatment indicator,
-          \u03bc<sub>E</sub> and \u03bc<sub>C</sub> are the expected responses under H\u2080,
-          and \u03b5<sub>i</sub> \u223c N(0, \u03c3\u00b2) is the random error.
-          The chronological bias effect \u03c4<sub>i</sub> depends on the chosen trend type:")),
-        tags$ul(class = "rd-model-list",
-          tags$li(HTML("<strong>Linear:</strong> \u03c4<sub>i</sub> = \u03b8 \u00b7 i/N")),
-          tags$li(HTML("<strong>Step:</strong> \u03c4<sub>i</sub> = \u03b8 \u00b7 \u230ai/k\u230b
-                       &nbsp;(saltus k = block size)")),
-          tags$li(HTML("<strong>Logarithmic:</strong> \u03c4<sub>i</sub> = \u03b8 \u00b7 log(i)"))
-        ),
-        p(class = "rd-model-text",
-          HTML("Here \u03b8 is the trend strength parameter and N is the total sample size.
-          The standardised trend effect is \u03b3 = \u03b8/\u03c3.")),
-        h5(class = "rd-model-title", "Hypothesis Test"),
-        p(class = "rd-model-text",
-          HTML("A two-sided t-test is applied to compare the two groups. Under chronological
-          bias, the test statistic follows a <strong>doubly non-central t-distribution</strong>
-          with non-centrality parameters \u03b4 (shift) and \u03bb (spread), derived from
-          the specific allocation sequence and trend model. The type I error for a given
-          sequence is:")),
-        p(class = "rd-model-eq",
-          HTML("P(|S| > t<sub>crit</sub>) = F(\u2212t<sub>crit</sub>; \u03b4, \u03bb) + 1 \u2212 F(t<sub>crit</sub>; \u03b4, \u03bb)")),
-        p(class = "rd-model-text",
-          "The rejection probability is averaged (weighted by sequence probability for
-          exact assessment, or by relative frequency for simulation) to obtain the
-          overall type I error estimate.")
-      ),
+        "Assesses the type I error inflation from a time trend in outcomes
+        (linear, step, or logarithmic) under the chosen randomization procedure.
+        See references for the underlying model."),
 
       div(class = "rd-reference-block",
         p(class = "rd-reference",
