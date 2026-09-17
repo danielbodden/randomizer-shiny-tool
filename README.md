@@ -4,24 +4,14 @@ A Shiny web application for generating and evaluating randomization sequences in
 
 Developed at **RealiseD** by [Stefanie Schoenen](https://www.linkedin.com/in/stefanie-schoenen-486b3a270/) and [Daniel Bodden](https://danielbodden.de/).
 
-**Live app:** [realisedrandomizer.shinyapps.io/realisedrandomizer](https://realisedrandomizer.shinyapps.io/realisedrandomizer)
+**Live app:** [realisedrandomizer.shinyapps.io/realisedrandomizer](https://realised.shinyapps.io/realisedrandomizer/)
 
 ---
 
 ## Features
 
 ### Randomization Sequence Generation
-Generate reproducible, documented randomization lists for clinical trials across seven procedures:
-
-| Procedure | Category |
-|---|---|
-| Complete Randomization | Unbounded Randomization |
-| Efron's Biased Coin Design | Unbounded Randomization |
-| Permuted Block Randomization | Terminal Balance |
-| Random Permuted Block Randomization | Terminal Balance |
-| Random Allocation Rule | Terminal Balance |
-| Big Stick Design | Maximum Tolerated Imbalance (MTI) |
-| Chen's Design | Maximum Tolerated Imbalance (MTI) |
+Generate reproducible, documented randomization lists for clinical trials.
 
 Each module supports:
 - Reproducible sequences via user-defined seed
