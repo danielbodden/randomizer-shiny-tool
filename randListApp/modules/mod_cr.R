@@ -14,11 +14,10 @@ mod_cr_ui <- function(id) {
       width = 300,
       h5("Parameters"),
 
-      numericInput(ns("n"), "Total sample size:",
-                   value = 10, min = 2, max = 10000, step = 1),
+      rd_n_input(ns("n"), "Total sample size:", 10),
 
       selectInput(ns("k"), "Number of treatment arms:",
-                  choices = as.character(2:6), selected = "2",
+                  choices = as.character(2:RD_MAX_ARMS), selected = "2",
                   selectize = FALSE),
 
       # Dynamic ratio and name inputs (rendered server-side)
@@ -26,8 +25,7 @@ mod_cr_ui <- function(id) {
       uiOutput(ns("name_inputs")),
 
       hr(),
-      numericInput(ns("seed"), "Seed (for reproducibility):",
-                   value = sample.int(2^31 - 1, 1)),
+      rd_seed_input(ns("seed")),
 
       actionButton(ns("generate"), "\u25b6  Generate", class = "btn-primary w-100 mt-2")
     ),
@@ -44,14 +42,17 @@ mod_cr_ui <- function(id) {
 
       p(class = "rd-description",
         "Complete Randomization (2 arms, ratio 1:1) is equivalent to tossing a fair
-        coin for every patient. With multiple arms or unequal ratios, the allocation
-        probability is proportional to each treatment's factor — a ratio of 1:2 means
-        the second treatment is allocated twice as often."),
+        coin for every patient. With multiple arms, Complete Randomization assigns,
+        in the simplest case of equal ratios, each participant with the same
+        probability to any arm (1 / number of arms). With an unequal allocation
+        ratio, the arms are assigned with different probabilities, determined by
+        the weights stated in the ratio."),
 
       p(class = "rd-reference",
         "Rosenberger WF, Lachin JM (2016). Randomization in Clinical Trials: Theory
         and Practice. 2nd ed. Hoboken, NJ: John Wiley & Sons."),
 
+      uiOutput(ns("error_ui")),
       uiOutput(ns("results_ui"))
     )
   )
@@ -62,6 +63,7 @@ mod_cr_server <- function(id) {
   moduleServer(id, function(input, output, session) {
 
     seq_obj <- reactiveVal(NULL)
+    errors  <- reactiveVal(NULL)
 
     # ── Dynamic sidebar inputs ─────────────────────────────────────────────
     output$ratio_inputs <- renderUI({
@@ -88,16 +90,39 @@ mod_cr_server <- function(id) {
 
     # ── Generate sequence ──────────────────────────────────────────────────
     observeEvent(input$generate, {
-      n <- min(input$n, 10000)
+      # the arm selector is always present, but the dependent ratio and
+      # name inputs are rendered server-side
+      req(input$k)
       k <- as.integer(input$k)
 
+      # Validate before anything reaches randomizeR: crPar() silently truncates
+      # non-integer ratios and set.seed() rejects non-integer seeds.
+      msgs <- c(
+        rd_check_int(input$n, "Total sample size", min = 2, max = RD_MAX_N),
+        rd_check_ratio(input, "ratio", k),
+        rd_check_seed(input$seed)
+      )
+      if (length(msgs) > 0) {
+        errors(msgs); seq_obj(NULL); return()
+      }
+      errors(NULL)
+
+      n      <- as.integer(input$n)
       ratio  <- get_ratio(input, "ratio", k)
       groups <- get_groups(input, "name", k)
 
-      par <- crPar(N = n, K = k, ratio = ratio, groups = groups)
-      seq <- genSeq(par, seed = input$seed)
-      seq_obj(seq)
+      res <- tryCatch({
+        par <- crPar(N = n, K = k, ratio = ratio, groups = groups)
+        genSeq(par, seed = as.integer(input$seed))
+      }, error = function(e) e)
+
+      if (inherits(res, "error")) {
+        errors(conditionMessage(res)); seq_obj(NULL); return()
+      }
+      seq_obj(res)
     })
+
+    output$error_ui <- renderUI({ rd_error_ui(errors()) })
 
     # ── Outputs ────────────────────────────────────────────────────────────
     output$results_ui <- renderUI({

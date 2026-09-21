@@ -13,8 +13,7 @@ mod_bsd_ui <- function(id) {
       width = 300,
       h5("Parameters"),
 
-      numericInput(ns("n"), "Total sample size:",
-                   value = 10, min = 2, max = 10000, step = 1),
+      rd_n_input(ns("n"), "Total sample size:", 10),
 
       numericInput(ns("mti"), "Maximum tolerated imbalance (MTI):",
                    value = 4, min = 1, step = 1),
@@ -23,8 +22,7 @@ mod_bsd_ui <- function(id) {
       textInput(ns("name2"), "Name of treatment 2:", value = "B"),
 
       hr(),
-      numericInput(ns("seed"), "Seed (for reproducibility):",
-                   value = sample.int(2^31 - 1, 1)),
+      rd_seed_input(ns("seed")),
 
       actionButton(ns("generate"), "\u25b6  Generate", class = "btn-primary w-100 mt-2")
     ),
@@ -45,9 +43,9 @@ mod_bsd_ui <- function(id) {
       p(class = "rd-description",
         "The Big Stick Design corresponds to a fair coin toss within a boundary for
         the maximum tolerated imbalance (MTI). When the imbalance reaches the MTI,
-        the next patient is assigned deterministically to restore balance.
-        Setting MTI = N/2 is equivalent to Complete Randomization;
-        setting MTI = 1 gives Permuted Block Randomization with blocks of size 2."),
+        the next patient is assigned deterministically.
+        Setting MTI = 1 gives Permuted Block Randomization with blocks of size 2.
+        The MTI must be a positive whole number."),
 
       p(class = "rd-reference",
         "Soares JF, Wu CF (1983). Some restricted randomization rules in sequential
@@ -55,6 +53,7 @@ mod_bsd_ui <- function(id) {
         doi:10.1080/03610928308828593"),
 
       # Results (hidden until generated)
+      uiOutput(ns("error_ui")),
       uiOutput(ns("results_ui"))
     )
   )
@@ -65,18 +64,40 @@ mod_bsd_server <- function(id) {
   moduleServer(id, function(input, output, session) {
 
     seq_obj <- reactiveVal(NULL)
+    errors  <- reactiveVal(NULL)
+    mti_val <- reactiveVal(NULL)
 
     # Generate sequence on button click
     observeEvent(input$generate, {
-      n   <- min(input$n, 10000)
-      mti <- max(1, input$mti)
+      # A negative MTI was previously replaced by 1 without notice
+      msgs <- c(
+        rd_check_int(input$n, "Total sample size", min = 2, max = RD_MAX_N),
+        rd_check_int(input$mti, "Maximum tolerated imbalance (MTI)", min = 1),
+        rd_check_seed(input$seed)
+      )
+      if (length(msgs) > 0) {
+        errors(msgs); seq_obj(NULL); return()
+      }
+      errors(NULL)
+
+      n   <- as.integer(input$n)
+      mti <- as.integer(input$mti)
       g1  <- if (nzchar(trimws(input$name1))) trimws(input$name1) else "A"
       g2  <- if (nzchar(trimws(input$name2))) trimws(input$name2) else "B"
 
-      par <- bsdPar(N = n, mti = mti, groups = c(g1, g2))
-      seq <- genSeq(par, seed = input$seed)
-      seq_obj(seq)
+      res <- tryCatch({
+        par <- bsdPar(N = n, mti = mti, groups = c(g1, g2))
+        genSeq(par, seed = as.integer(input$seed))
+      }, error = function(e) e)
+
+      if (inherits(res, "error")) {
+        errors(conditionMessage(res)); seq_obj(NULL); return()
+      }
+      mti_val(mti)
+      seq_obj(res)
     })
+
+    output$error_ui <- renderUI({ rd_error_ui(errors()) })
 
     # All results rendered in one block for clean animation
     output$results_ui <- renderUI({
@@ -107,7 +128,7 @@ mod_bsd_server <- function(id) {
 
     output$walk_plot <- renderPlot({
       req(seq_obj())
-      rand_walk_plot(seq_obj()@M)
+      rand_walk_plot(seq_obj()@M, mti = mti_val())
     })
 
     output$download <- downloadHandler(

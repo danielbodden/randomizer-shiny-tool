@@ -6,7 +6,10 @@ server <- function(input, output, session) {
   mod_rar_server("rar")
   mod_bsd_server("bsd")
   mod_chen_server("chen")
-  mod_selbias_server("selbias")
-  mod_chronbias_server("chronbias")
   mod_imbal_server("imbal")
+
+  # Selection Bias and Chronological Bias are under construction and are not
+  # part of the UI (see ui.R). Re-enable together with their nav_panel entries:
+  #   mod_selbias_server("selbias")
+  #   mod_chronbias_server("chronbias")
 }

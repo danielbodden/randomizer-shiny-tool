@@ -3,11 +3,6 @@ ui <- page_navbar(
   # ── Navbar brand ────────────────────────────────────────────────────────────
   title = tags$div(
     style = "display:flex; align-items:center; gap:16px; height:64px; padding:0;",
-    tags$img(
-      src    = "logo_textless_light.png",
-      class  = "rd-navbar-logo",
-      alt    = "RealiseD"
-    ),
     tags$div(
       class = "rd-navbar-tool-label",
       tags$span(class = "rd-tool-name",  "Randomization"),
@@ -59,7 +54,7 @@ ui <- page_navbar(
              "Generating Randomization Lists for Clinical Trials"),
           p(class = "rd-hero-sub",
             "Select a randomization procedure, configure the parameters for your
-            trial, and click Generate to produce an allocation sequence with a
+            trial, and click generate to produce an allocation sequence with a
             fixed seed for reproducibility and a downloadable report documenting
             the method, parameters, and generated list.")
         )
@@ -89,8 +84,7 @@ ui <- page_navbar(
       div(
         class = "rd-methods-section",
 
-        # Group 1: No terminal balance
-        p(class = "rd-methods-heading", "No Terminal Balance"),
+        p(class = "rd-methods-heading", "Randomization Procedures"),
         div(
           class = "rd-methods-grid",
 
@@ -114,13 +108,7 @@ ui <- page_navbar(
                 allocations."),
               div(class = "rd-card-meta",
                   span(class = "rd-card-arms", "2 arms"),
-                  span(class = "rd-card-arrow", "\u2192")))
-        ),
-
-        # Group 2: Terminal balance
-        p(class = "rd-methods-heading", "Terminal Balance"),
-        div(
-          class = "rd-methods-grid",
+                  span(class = "rd-card-arrow", "\u2192"))),
 
           div(class = "rd-method-card rd-card-link",
               onclick = "rdGoToTab('Permuted Block')",
@@ -129,7 +117,7 @@ ui <- page_navbar(
                 "Allocation in blocks of fixed length, with randomization
                 within each block according to the Random Allocation Rule."),
               div(class = "rd-card-meta",
-                  span(class = "rd-card-arms", "2 arms"),
+                  span(class = "rd-card-arms", "2–6 arms"),
                   span(class = "rd-card-arrow", "\u2192"))),
 
           div(class = "rd-method-card rd-card-link",
@@ -139,7 +127,7 @@ ui <- page_navbar(
                 "Permuted block randomization with block sizes for each block
                 randomly selected from a predefined set."),
               div(class = "rd-card-meta",
-                  span(class = "rd-card-arms", "2 arms"),
+                  span(class = "rd-card-arms", "2–6 arms"),
                   span(class = "rd-card-arrow", "\u2192"))),
 
           div(class = "rd-method-card rd-card-link",
@@ -151,12 +139,7 @@ ui <- page_navbar(
               div(class = "rd-card-meta",
                   span(class = "rd-card-arms", "2\u20136 arms"),
                   span(class = "rd-card-arrow", "\u2192")))
-        ),
-
-        # Group 3: Maximum tolerated imbalance
-        p(class = "rd-methods-heading", "Maximum Tolerated Imbalance (MTI)"),
-        div(
-          class = "rd-methods-grid",
+,
 
           div(class = "rd-method-card rd-card-link",
               onclick = "rdGoToTab('Big Stick Design')",
@@ -182,38 +165,25 @@ ui <- page_navbar(
     )
   ),
 
-  # ── No Terminal Balance ───────────────────────────────────────────────────────
+  # ── Randomization procedures ─────────────────────────────────────────────────
   nav_menu(
-    "No Terminal Balance",
+    "Randomization Procedures",
     nav_panel("Complete Randomization", mod_cr_ui("cr")),
-    nav_panel("Efron's Biased Coin",    mod_ebc_ui("ebc"))
+    nav_panel("Efron's Biased Coin",    mod_ebc_ui("ebc")),
+    nav_panel("Permuted Block",         mod_pbr_ui("pbr")),
+    nav_panel("Random Permuted Block",  mod_rpbr_ui("rpbr")),
+    nav_panel("Random Allocation Rule", mod_rar_ui("rar")),
+    nav_panel("Big Stick Design",       mod_bsd_ui("bsd")),
+    nav_panel("Chen's Design",          mod_chen_ui("chen"))
   ),
 
-  # ── Terminal Balance ─────────────────────────────────────────────────────────
-  nav_menu(
-    "Terminal Balance",
-    align = "right",
-    nav_panel("Permuted Block",        mod_pbr_ui("pbr")),
-    nav_panel("Random Permuted Block", mod_rpbr_ui("rpbr")),
-    nav_panel("Random Allocation Rule",mod_rar_ui("rar"))
-  ),
-
-  # ── Maximum Tolerated Imbalance ──────────────────────────────────────────────
-  nav_menu(
-    "Maximum Tolerated Imbalance",
-    align = "right",
-    nav_panel("Big Stick Design", mod_bsd_ui("bsd")),
-    nav_panel("Chen's Design",    mod_chen_ui("chen"))
-  ),
-
-  # ── Bias Evaluation ───────────────────────────────────────────────────────────
-  nav_menu(
-    "Bias Evaluation",
-    align = "right",
-    nav_panel("Imbalance",          mod_imbal_ui("imbal")),
-    nav_panel("Selection Bias",     mod_selbias_ui("selbias")),
-    nav_panel("Chronological Bias", mod_chronbias_ui("chronbias"))
-  ),
+  # ── Imbalance assessment ─────────────────────────────────────────────────────
+  # Selection Bias and Chronological Bias are not validated yet and are
+  # therefore not part of the navigation. To re-enable them, restore the
+  # nav_panel() entries below and the matching server calls in server.R:
+  #   nav_panel("Selection Bias",     mod_selbias_ui("selbias")),
+  #   nav_panel("Chronological Bias", mod_chronbias_ui("chronbias"))
+  nav_panel("Imbalance", mod_imbal_ui("imbal")),
 
   # ── About ─────────────────────────────────────────────────────────────────────
   nav_panel(

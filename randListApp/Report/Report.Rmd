@@ -27,6 +27,7 @@ groups <- params$Seq@groups
 
 #possible Designs:
   #BSD -> "BSD(x)"
+  #CHEN -> "CHEN(x, x)"
   #CR -> "CR"
   #EBC -> "EBC(x)"
   #MAX -> "MP"
@@ -38,6 +39,8 @@ groups <- params$Seq@groups
 #get procedure specific parameters
 switch(proc,
       'BS'= mti <- params$Seq@mti,
+      'CH'= {mti <- params$Seq@mti
+             p <- params$Seq@p},
       'CR'= NULL,
       'EB'= p <- params$Seq@p,
       'MP'= mti <- params$Seq@mti,
@@ -67,13 +70,21 @@ switch(proc,
                   '\n Number of patients: ', n, 
                   '\n Number of treatments: ', k, 
                   '\n Ratio of assgnment: ', ratio, 
-                  '\n Maximum tolerated imbalance: ', mti, 
+                  '\n Maximum tolerated imbalance: ', mti,
+                  '\n Seed: ', seed, '\n') ,
+      'CH'= cat('The following parameters were used to generate the randomization sequence: \n',
+                  'Procedure: ', procedure,
+                  '\n Number of patients: ', n,
+                  '\n Number of treatments: ', k,
+                  '\n Ratio of assgnment: ', ratio,
+                  '\n Maximum tolerated imbalance: ', mti,
+                  '\n Success probability of the biased coin: ', p,
                   '\n Seed: ', seed, '\n') ,
       'CR'= cat('The following parameters were used to generate the randomization sequence: \n',
                   'Procedure: ', procedure,
-                  '\n Number of patients: ', n, 
-                  '\n Number of treatments: ', k, 
-                  '\n Ratio of assgnment: ', ratio, 
+                  '\n Number of patients: ', n,
+                  '\n Number of treatments: ', k,
+                  '\n Ratio of assgnment: ', ratio,
                   '\n Seed: ', seed, '\n') ,
       'EB'= cat('The following parameters were used to generate the randomization sequence: \n',
                   'Procedure: ', procedure,
@@ -152,8 +163,21 @@ cat(getRandList(params$Seq))
 # Visualization of randomization sequence:
 ```{r, echo=FALSE}
 if (k == 2){
-plot(0:length(params$Seq@M), cumsum(c(0,2*params$Seq@M-1)), type = "b", 
-         xlab = "Patients", ylab ="Treatment assignment")
+walk <- cumsum(c(0, 2*params$Seq@M - 1))
+ylim <- range(c(walk, if (proc %in% c('BS', 'CH', 'MP')) c(-mti, mti)))
+plot(0:length(params$Seq@M), walk, type = "b", ylim = ylim, yaxt = "n",
+         xlab = "Patients",
+         ylab = "Cumulative imbalance (difference in group sizes)")
+# the cumulative imbalance is a count difference: only integer ticks
+yt <- seq(floor(ylim[1]), ceiling(ylim[2]),
+          by = max(1, ceiling(diff(ylim) / 10)))
+axis(2, at = yt, las = 1)
+# horizontal line marking perfect balance
+abline(h = 0, lty = 2, col = "red")
+if (proc %in% c('BS', 'CH', 'MP')) {
+  # boundaries of the maximum tolerated imbalance
+  abline(h = c(-mti, mti), lty = 3, col = "darkred")
+}
 } else {
   cat("The visualization of the randomization sequence is not available for more than 2 arms")
 }
@@ -161,6 +185,8 @@ plot(0:length(params$Seq@M), cumsum(c(0,2*params$Seq@M-1)), type = "b",
 ```
 
 # Code
+
+The following code was used to generate the randomization sequence:
 
 ```{r, echo=FALSE}
 #Genrate report depending on the procedure
@@ -175,47 +201,55 @@ for (g in groups){
 }
 
 switch(proc,
-      'BS'= cat('The following code was used to generate the randomization sequence: \n library(randomizeR) \n',
+      'BS'= cat('library(randomizeR) 
+',
                   'genSeq(bsdPar(',n,',',mti,', groups = c(',sub('.','',grstr),')), 1, ', seed,')') ,
-      'CR'= {cat('The following code was used to generate the randomization sequence:
-                \n library(randomizeR) \n',
+      'CH'= cat('library(randomizeR) 
+',
+                  'genSeq(chenPar(',n,',',mti,',',p,', groups = c(',sub('.','',grstr),')), 1, ', seed,')') ,
+      'CR'= {cat('library(randomizeR) 
+',
                   'genSeq(crPar(',n,',',k,', ratio = c(',sub('.','',ratstr),'), groups = c(',sub('.','',grstr),')),1 ,', seed,')')} ,
-      'EB'= cat('The following code was used to generate the randomization sequence: \n library(randomizeR) \n',
+      'EB'= cat('library(randomizeR) 
+',
                   'genSeq(ebcPar(',n,',',p,', groups = c(',sub('.','',grstr),')),1 ,', seed,')') ,
-      'MP'= {cat('The following code was used to generate the randomization sequence: \n library(randomizeR) \n',
+      'MP'= {cat('library(randomizeR) 
+',
                   'genSeq(mpPar(',n,',',mti,', ratio = c(',sub('.','',ratstr),'), groups = c(',sub('.','',grstr),')),1 ,', seed,')')} ,
       'PB'= { bcstr <- ''
               for (l in bc){
                 bcstr <- paste(bcstr, l, sep = ',')  
               }
-              cat('The following code was used to generate the randomization sequence:
-                \n library(randomizeR) \n',
-                  'genSeq(pbrPar(c(',sub('.','',bcstr),'), ratio = c(',sub('.','',ratstr),'), c(',sub('.','',grstr),')),1 ,', seed,')')} ,
+              cat('library(randomizeR) 
+',
+                  'genSeq(pbrPar(c(',sub('.','',bcstr),'), K = ',k,', ratio = c(',sub('.','',ratstr),'), groups = c(',sub('.','',grstr),')),1 ,', seed,')')} ,
       'RP'= { rbstr <- ''
               for (l in rb){
                 rbstr <- paste(rbstr, l, sep = ',')  
               }
-              cat('The following code was used to generate the randomization sequence:
-                \n library(randomizeR) \n',
+              cat('library(randomizeR) 
+',
                   'genSeq(rpbrPar(',n,',c(',sub('.','',rbstr),'),',k,', ratio = c(',sub('.','',ratstr),'), groups = c(',sub('.','',grstr),'), filledBlock =',fb,'),1 ,', seed,')')} ,
       'TB'= { bcstr <- ''
               for (l in bc){
                 bcstr <- paste(bcstr, l, sep = ',')  
               }
-              cat('The following code was used to generate the randomization sequence:
-                \n library(randomizeR) \n',
+              cat('library(randomizeR) 
+',
                   'genSeq(tbdPar(c(',sub('.','',bcstr),'), groups = c(',sub('.','',grstr),')),1 ,', seed,')')}, 
-      'UD'= cat('The following code was used to generate the randomization sequence: \n library(randomizeR) \n',
+      'UD'= cat('library(randomizeR) 
+',
                   'genSeq(udPar(',n,',',ini,',',add,' groups = c(',sub('.','',grstr),')),1 ,', seed,')'),
       
-      'RA'= cat('The following code was used to generate the randomization sequence: \n library(randomizeR) \n',
+      'RA'= cat('library(randomizeR) 
+',
                   'genSeq(rarPar(',n,',',k,', ratio = c(',sub('.','',ratstr),'), groups = c(',sub('.','',grstr),')),1 ,', seed,')'),
       'RT' ={ rbstr <- ''
               for (l in rb){
                 rbstr <- paste(rbstr, l, sep = ',')  
               }
-              cat('The following code was used to generate the randomization sequence:
-                \n library(randomizeR) \n',
+              cat('library(randomizeR) 
+',
                   'genSeq(rtbdPar(',n,',c(',sub('.','',rbstr),'), groups = c(',sub('.','',grstr),'), filledBlock =',fb,'),1 ,', seed,')')
         
       }

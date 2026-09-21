@@ -39,6 +39,112 @@ rd_info_icon <- function() {
   </svg>')
 }
 
+# ── Input validation helpers ────────────────────────────────────────────────
+# Values that reach randomizeR unchecked either abort the app with a raw R
+# error or are silently coerced (e.g. a non-integer ratio truncated, p > 1
+# treated as p = 1), so every module validates its inputs first and reports
+# the problems back to the user instead.
+
+# set.seed() only accepts integers in the range of a 32-bit signed integer
+RD_MAX_SEED <- .Machine$integer.max   # 2147483647
+
+# Largest sample size that can be entered. Lists for more than a few hundred
+# patients are rarely generated interactively, and the former limit of 10000
+# only made the app slow; change this constant to raise the limit again.
+RD_MAX_N <- 1000
+
+# Largest number of treatment arms offered by the multi-arm procedures
+RD_MAX_ARMS <- 6
+
+# Largest sample size for which the exact imbalance assessment is offered.
+# getAllSeq() enumerates every possible sequence, so runtime and memory grow
+# exponentially in N (N = 24 already runs for several minutes).
+RD_EXACT_MAX_N <- 16
+
+# Is x a single, finite, whole number?
+rd_is_whole <- function(x) {
+  length(x) == 1 && !is.null(x) && !is.na(x) && is.finite(x) &&
+    abs(x - round(x)) < .Machine$double.eps^0.5
+}
+
+# Returns NULL if x is a valid integer input, otherwise a message string
+rd_check_int <- function(x, label, min = NULL, max = NULL) {
+  if (is.null(x) || length(x) != 1 || is.na(x)) {
+    return(sprintf("%s: please enter a value.", label))
+  }
+  if (!rd_is_whole(x)) {
+    return(sprintf("%s must be a whole number (entered: %s).",
+                   label, format(x, scientific = FALSE)))
+  }
+  if (!is.null(min) && x < min) {
+    return(sprintf("%s must be at least %s (entered: %s).",
+                   label, format(min, scientific = FALSE),
+                   format(x, scientific = FALSE)))
+  }
+  if (!is.null(max) && x > max) {
+    return(sprintf("%s must not exceed %s (entered: %s).",
+                   label, format(max, scientific = FALSE),
+                   format(x, scientific = FALSE)))
+  }
+  NULL
+}
+
+# Returns NULL if x lies in [min, max], otherwise a message string
+rd_check_num <- function(x, label, min, max) {
+  if (is.null(x) || length(x) != 1 || is.na(x) || !is.finite(x)) {
+    return(sprintf("%s: please enter a value.", label))
+  }
+  if (x < min || x > max) {
+    return(sprintf("%s must lie in [%s, %s] (entered: %s).",
+                   label, min, max, format(x, scientific = FALSE)))
+  }
+  NULL
+}
+
+rd_check_seed <- function(x) {
+  rd_check_int(x, "Seed", min = 0, max = RD_MAX_SEED)
+}
+
+# Validate the dynamic allocation-ratio inputs: crPar()/rarPar() require
+# positive integers; non-integer entries were previously truncated silently.
+rd_check_ratio <- function(input, prefix, k) {
+  msgs <- character(0)
+  for (i in seq_len(k)) {
+    msg <- rd_check_int(input[[paste0(prefix, i)]],
+                        sprintf("Factor of treatment %d", i), min = 1)
+    if (!is.null(msg)) msgs <- c(msgs, msg)
+  }
+  msgs
+}
+
+# Shared helper: seed input. The admissible range (0 ... .Machine$integer.max)
+# is not shown in the label; a seed outside it is reported as an input error.
+rd_seed_input <- function(id) {
+  numericInput(id, "Seed (for reproducibility):",
+               value = sample.int(RD_MAX_SEED, 1), step = 1)
+}
+
+# Shared helper: sample size input, limited to RD_MAX_N
+rd_n_input <- function(id, label, value) {
+  numericInput(id, label, value = value, min = 2, max = RD_MAX_N, step = 1)
+}
+
+# Shared helper: input problems rendered as a coral error box
+rd_error_ui <- function(msgs) {
+  if (is.null(msgs) || length(msgs) == 0) return(NULL)
+  div(class = "rd-bias-error",
+      tags$strong("Please check the parameters:"),
+      tags$ul(style = "margin:6px 0 0 0; padding-left:18px;",
+              lapply(msgs, function(m) tags$li(m))))
+}
+
+# Shared helper: explanatory note in the main panel (green info box)
+rd_note_ui <- function(...) {
+  div(class = "rd-info-note",
+      div(class = "rd-info-icon", rd_info_icon()),
+      div(class = "rd-info-text", ...))
+}
+
 # Shared helper: bias summary as styled metric cards
 bias_summary_ui <- function(res, alpha = 0.05) {
   if (inherits(res, "error")) {
@@ -194,23 +300,26 @@ imbal_assessment_plot <- function(res) {
 
   d       <- res@D
   wt_col  <- names(d)[2]   # "Probability" or "Relative_Frequency"
-  val_col <- names(d)[3]   # "imb", "absImb", or "loss"
+  val_col <- names(d)[3]   # "imb", "absImb" or "maxImb"
   vals    <- d[[val_col]]
   wts     <- d[[wt_col]]
 
   mean_val <- sum(vals * wts)
-  p_bal    <- sum(wts[vals == 0])
+  # For the maximum imbalance attained during the trial, a value of 0 is
+  # impossible, so the best attainable value (1) is reported instead.
+  p_bal    <- if (val_col == "maxImb") sum(wts[vals <= 1]) else sum(wts[vals == 0])
+  p_lab    <- if (val_col == "maxImb") "P(max. imbalance <= 1)" else "P(perfect balance)"
 
   label <- switch(val_col,
     "imb"    = "Signed Imbalance",
     "absImb" = "Absolute Imbalance",
-    "loss"   = "Loss",
+    "maxImb" = "Maximum Imbalance",
     val_col
   )
   x_label <- switch(val_col,
     "imb"    = "N\u1D07 \u2212 N\u1D04 at trial end",
     "absImb" = "|N\u1D07 \u2212 N\u1D04| at trial end",
-    "loss"   = "Loss at trial end",
+    "maxImb" = "Maximum |N\u1D07 \u2212 N\u1D04| during the trial",
     val_col
   )
 
@@ -239,7 +348,7 @@ imbal_assessment_plot <- function(res) {
     labs(
       title    = paste("Imbalance distribution \u2014", label),
       subtitle = paste0("Mean: ", round(mean_val, 3),
-                        " | P(perfect balance) = ", round(p_bal * 100, 1), "%"),
+                        " | ", p_lab, " = ", round(p_bal * 100, 1), "%"),
       x = x_label,
       y = "Probability"
     ) +
@@ -262,7 +371,8 @@ imbal_summary_ui <- function(res) {
   sm       <- summary(res)
   sv       <- sm[, 1]
   mean_val <- sv["mean"]
-  p_bal    <- sum(wts[vals == 0])
+  p_bal    <- if (val_col == "maxImb") sum(wts[vals <= 1]) else sum(wts[vals == 0])
+  p_lab    <- if (val_col == "maxImb") "P(max. imbalance <= 1)" else "P(perfect balance)"
 
   # Simulation ("Relative_Frequency") vs exact ("Probability") weight column.
   # Under simulation, mean/median/quantiles are all estimated from only r draws,
@@ -278,7 +388,7 @@ imbal_summary_ui <- function(res) {
   type_label <- switch(val_col,
     "imb"    = "Signed imbalance",
     "absImb" = "Absolute imbalance",
-    "loss"   = "Loss",
+    "maxImb" = "Maximum imbalance",
     val_col
   )
 
@@ -302,7 +412,7 @@ imbal_summary_ui <- function(res) {
               "Mean is a Monte Carlo estimate; its standard error is shown below.")),
       div(class = "rd-bias-metrics-row",
           metric(paste("Mean", type_label),      fmt(mean_val)),
-          metric("P(perfect balance)",            fmtp(p_bal), "#00774A"),
+          metric(p_lab,                           fmtp(p_bal), "#00774A"),
           metric("Monte Carlo Standard Error",    fmt(mc_se))
       )
     )
@@ -310,7 +420,7 @@ imbal_summary_ui <- function(res) {
     tagList(
       div(class = "rd-bias-metrics-row",
           metric(paste("Mean", type_label), fmt(mean_val)),
-          metric("P(perfect balance)",      fmtp(p_bal), "#00774A"),
+          metric(p_lab,                    fmtp(p_bal), "#00774A"),
           metric("Std. deviation",          fmt(sv["sd"]))
       ),
       div(class = "rd-bias-quant-wrap",
@@ -330,8 +440,21 @@ imbal_summary_ui <- function(res) {
   }
 }
 
-# Shared helper: randomization walk plot — RealiseD brand colors
-rand_walk_plot <- function(M) {
+# Shared helper: integer tick positions covering a range, thinned out so that
+# the axis never gets crowded (used for the cumulative imbalance, which can
+# only take integer values)
+rd_integer_ticks <- function(rng, max_ticks = 10) {
+  lo <- floor(min(rng)); hi <- ceiling(max(rng))
+  by <- max(1, ceiling((hi - lo) / max_ticks))
+  seq(lo, hi, by = by)
+}
+
+# Shared helper: randomization walk plot
+# mti: optional maximum tolerated imbalance — drawn as boundaries at +/- mti
+rand_walk_plot <- function(M, mti = NULL) {
+  walk <- cumsum(c(0, 2 * M - 1))
+  ylim <- range(c(walk, if (!is.null(mti)) c(-mti, mti)))
+
   par(
     bg  = "#f4f7f5",
     col.axis = "#312f30",
@@ -341,24 +464,33 @@ rand_walk_plot <- function(M) {
     mar      = c(4, 4, 3, 2)
   )
   plot(
-    0:length(M), cumsum(c(0, 2 * M - 1)),
+    0:length(M), walk,
     type = "l",
     lwd  = 2,
     col  = "#00774A",
+    ylim = ylim,
     xlab = "Patient",
-    ylab = "Cumulative imbalance",
+    ylab = "Cumulative imbalance (difference in group sizes)",
     main = "Randomization Walk",
     axes = FALSE,
     panel.first = {
       grid(col = "#d1d2d4", lty = 1, lwd = 0.5)
       abline(h = 0, lty = 2, col = "#f6a092", lwd = 1.5)
+      if (!is.null(mti)) {
+        abline(h = c(-mti, mti), lty = 3, col = "#c9614f", lwd = 1.5)
+      }
     }
   )
-  points(0:length(M), cumsum(c(0, 2 * M - 1)),
-         pch = 19, col = "#00774A", cex = 0.5)
+  points(0:length(M), walk, pch = 19, col = "#00774A", cex = 0.5)
   axis(1, col = "#d1d2d4", col.ticks = "#d1d2d4")
-  axis(2, col = "#d1d2d4", col.ticks = "#d1d2d4", las = 1)
+  # the cumulative imbalance is a count difference, so only integer ticks
+  axis(2, at = rd_integer_ticks(ylim), col = "#d1d2d4",
+       col.ticks = "#d1d2d4", las = 1)
   box(col = "#d1d2d4")
+  if (!is.null(mti)) {
+    mtext(paste0("dotted lines: ± MTI = ", mti), side = 3, line = 0.2,
+          adj = 1, cex = 0.8, col = "#5a5756")
+  }
 }
 
 # Shared helper: collect treatment group names from dynamic inputs

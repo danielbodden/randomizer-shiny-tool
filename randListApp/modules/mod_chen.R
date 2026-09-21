@@ -13,21 +13,19 @@ mod_chen_ui <- function(id) {
       width = 300,
       h5("Parameters"),
 
-      numericInput(ns("n"), "Total sample size:",
-                   value = 10, min = 2, max = 10000, step = 1),
+      rd_n_input(ns("n"), "Total sample size:", 10),
 
       numericInput(ns("mti"), "Maximum tolerated imbalance (MTI):",
                    value = 3, min = 1, step = 1),
 
-      numericInput(ns("p"), "Biasing probability (p):",
+      numericInput(ns("p"), "Biasing probability (p ∈ [0.5, 1]):",
                    value = 0.75, min = 0.5, max = 1, step = 0.05),
 
       textInput(ns("name1"), "Name of treatment 1:", value = "A"),
       textInput(ns("name2"), "Name of treatment 2:", value = "B"),
 
       hr(),
-      numericInput(ns("seed"), "Seed (for reproducibility):",
-                   value = sample.int(2^31 - 1, 1)),
+      rd_seed_input(ns("seed")),
 
       actionButton(ns("generate"), "\u25b6  Generate", class = "btn-primary w-100 mt-2")
     ),
@@ -44,16 +42,16 @@ mod_chen_ui <- function(id) {
       p(class = "rd-description",
         "Chen's Design (2000) combines the Big Stick Design with Efron's Biased
         Coin. When the imbalance is strictly below the MTI, a biased coin with
-        probability p is used to favour the under-represented treatment. When the
-        MTI is reached, the next patient is assigned deterministically to restore
-        balance. Setting p = 0.5 recovers the Big Stick Design; setting
-        MTI = N gives Efron's Biased Coin Design."),
+        probability p ∈ [0.5, 1] is used to favour the under-represented
+        treatment. When the MTI is reached, the next patient is assigned
+        deterministically. The MTI must be a positive whole number."),
 
       p(class = "rd-reference",
         "Chen YP (1999). Biased coin design with imbalance tolerance.
         Communications in Statistics \u2013 Stochastic Models, 15(5), 953\u2013975.
         doi:10.1080/15326349908807570"),
 
+      uiOutput(ns("error_ui")),
       uiOutput(ns("results_ui"))
     )
   )
@@ -64,18 +62,42 @@ mod_chen_server <- function(id) {
   moduleServer(id, function(input, output, session) {
 
     seq_obj <- reactiveVal(NULL)
+    errors  <- reactiveVal(NULL)
+    mti_val <- reactiveVal(NULL)
 
     observeEvent(input$generate, {
-      n   <- min(input$n, 10000)
-      mti <- max(1, input$mti)
-      p   <- max(0.5, min(1, input$p))
+      # p and MTI were previously clamped silently (p = 0.4 -> 0.5, p = 1.5 -> 1,
+      # MTI = -3 -> 1), so the list did not match the parameters on screen.
+      msgs <- c(
+        rd_check_int(input$n, "Total sample size", min = 2, max = RD_MAX_N),
+        rd_check_int(input$mti, "Maximum tolerated imbalance (MTI)", min = 1),
+        rd_check_num(input$p, "Biasing probability (p)", min = 0.5, max = 1),
+        rd_check_seed(input$seed)
+      )
+      if (length(msgs) > 0) {
+        errors(msgs); seq_obj(NULL); return()
+      }
+      errors(NULL)
+
+      n   <- as.integer(input$n)
+      mti <- as.integer(input$mti)
+      p   <- input$p
       g1  <- if (nzchar(trimws(input$name1))) trimws(input$name1) else "A"
       g2  <- if (nzchar(trimws(input$name2))) trimws(input$name2) else "B"
 
-      par <- chenPar(N = n, mti = mti, p = p, groups = c(g1, g2))
-      seq <- genSeq(par, seed = input$seed)
-      seq_obj(seq)
+      res <- tryCatch({
+        par <- chenPar(N = n, mti = mti, p = p, groups = c(g1, g2))
+        genSeq(par, seed = as.integer(input$seed))
+      }, error = function(e) e)
+
+      if (inherits(res, "error")) {
+        errors(conditionMessage(res)); seq_obj(NULL); return()
+      }
+      mti_val(mti)
+      seq_obj(res)
     })
+
+    output$error_ui <- renderUI({ rd_error_ui(errors()) })
 
     output$results_ui <- renderUI({
       req(seq_obj())
@@ -102,7 +124,7 @@ mod_chen_server <- function(id) {
 
     output$walk_plot <- renderPlot({
       req(seq_obj())
-      rand_walk_plot(seq_obj()@M)
+      rand_walk_plot(seq_obj()@M, mti = mti_val())
     })
 
     output$download <- downloadHandler(

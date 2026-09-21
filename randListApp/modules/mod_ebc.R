@@ -13,18 +13,16 @@ mod_ebc_ui <- function(id) {
       width = 300,
       h5("Parameters"),
 
-      numericInput(ns("n"), "Total sample size:",
-                   value = 10, min = 2, max = 10000, step = 1),
+      rd_n_input(ns("n"), "Total sample size:", 10),
 
-      numericInput(ns("p"), "Biasing probability (p):",
+      numericInput(ns("p"), "Biasing probability (p ∈ [0.5, 1]):",
                    value = 0.75, min = 0.5, max = 1, step = 0.05),
 
       textInput(ns("name1"), "Name of treatment 1:", value = "A"),
       textInput(ns("name2"), "Name of treatment 2:", value = "B"),
 
       hr(),
-      numericInput(ns("seed"), "Seed (for reproducibility):",
-                   value = sample.int(2^31 - 1, 1)),
+      rd_seed_input(ns("seed")),
 
       actionButton(ns("generate"), "\u25b6  Generate", class = "btn-primary w-100 mt-2")
     ),
@@ -43,13 +41,15 @@ mod_ebc_ui <- function(id) {
         "Efron's Biased Coin Design (1971) uses an adaptive coin whose bias depends
         on the current imbalance. When both groups are equal, a fair coin is tossed.
         When one group leads, the next patient is assigned to the under-represented
-        treatment with probability p > 0.5. Setting p = 0.5 gives Complete
-        Randomization; p = 1 gives Permuted Block Randomization with blocks of size 2."),
+        treatment with probability p. The biasing probability must lie in
+        [0.5, 1]: setting p = 0.5 gives Complete Randomization, p = 1 gives
+        Permuted Block Randomization with blocks of size 2."),
 
       p(class = "rd-reference",
         "Efron B (1971). Forcing a sequential experiment to be balanced.
         Biometrika, 58(3), 403\u2013417. doi:10.1093/biomet/58.3.403"),
 
+      uiOutput(ns("error_ui")),
       uiOutput(ns("results_ui"))
     )
   )
@@ -60,17 +60,38 @@ mod_ebc_server <- function(id) {
   moduleServer(id, function(input, output, session) {
 
     seq_obj <- reactiveVal(NULL)
+    errors  <- reactiveVal(NULL)
 
     observeEvent(input$generate, {
-      n <- min(input$n, 10000)
-      p <- max(0.5, min(1, input$p))
+      # p was previously clamped silently: p = 0.4 produced a list for p = 0.5
+      # and p = 1.5 a list for p = 1, without the user noticing.
+      msgs <- c(
+        rd_check_int(input$n, "Total sample size", min = 2, max = RD_MAX_N),
+        rd_check_num(input$p, "Biasing probability (p)", min = 0.5, max = 1),
+        rd_check_seed(input$seed)
+      )
+      if (length(msgs) > 0) {
+        errors(msgs); seq_obj(NULL); return()
+      }
+      errors(NULL)
+
+      n  <- as.integer(input$n)
+      p  <- input$p
       g1 <- if (nzchar(trimws(input$name1))) trimws(input$name1) else "A"
       g2 <- if (nzchar(trimws(input$name2))) trimws(input$name2) else "B"
 
-      par <- ebcPar(N = n, p = p, groups = c(g1, g2))
-      seq <- genSeq(par, seed = input$seed)
-      seq_obj(seq)
+      res <- tryCatch({
+        par <- ebcPar(N = n, p = p, groups = c(g1, g2))
+        genSeq(par, seed = as.integer(input$seed))
+      }, error = function(e) e)
+
+      if (inherits(res, "error")) {
+        errors(conditionMessage(res)); seq_obj(NULL); return()
+      }
+      seq_obj(res)
     })
+
+    output$error_ui <- renderUI({ rd_error_ui(errors()) })
 
     output$results_ui <- renderUI({
       req(seq_obj())
