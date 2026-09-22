@@ -2,7 +2,7 @@
 
 A Shiny web application for generating and evaluating randomization sequences in clinical trials, built on the [randomizeR](https://cran.r-project.org/package=randomizeR) R package.
 
-Developed at **RealiseD** by [Stefanie Schoenen](https://www.linkedin.com/in/stefanie-schoenen-486b3a270/) and [Daniel Bodden](https://danielbodden.de/).
+Developed by [Stefanie Schoenen](https://www.linkedin.com/in/stefanie-schoenen-486b3a270/) and [Daniel Bodden](https://danielbodden.de/).
 
 **Live app:** [realisedrandomizer.shinyapps.io/realisedrandomizer](https://realised.shinyapps.io/realisedrandomizer/)
 
@@ -22,6 +22,8 @@ Each module supports:
 Assess the statistical properties of randomization sequences under three criteria:
 
 - **Imbalance** — distribution of absolute imbalance, signed imbalance, or loss across sequences
+
+### Currently under development:
 - **Selection Bias** — type I error inflation under the Convergent (CS) or Directional (DS) guessing strategy
 - **Chronological Bias** — type I error inflation under linear, stepwise, or logarithmic time trends
 
